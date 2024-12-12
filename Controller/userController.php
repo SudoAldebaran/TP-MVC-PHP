@@ -34,7 +34,8 @@ class userController
             $_SESSION['user'] = [
                 'firstName' => $result->getFirstName(),
                 'lastName' => $result->getLastName(),
-                'admin' => $result->getAdmin() // Ajoutez cette ligne
+                'admin' => $result->getAdmin(),
+                'email' => $result->getEmail()
             ];
             header('Location: index.php?ctrl=user&action=home');
             exit();
@@ -88,7 +89,7 @@ class userController
         exit();
     }    
 
-    private function isAdmin()
+    public function isAdmin()
     {
         return isset($_SESSION['user']) && $_SESSION['user']['admin'] == 1;
     }
@@ -104,4 +105,32 @@ class userController
             require('./View/main.php');
         }
     }
+
+    public function deleteUser()
+{
+    // Vérifier que l'utilisateur est admin
+    if (!$this->isAdmin()) {
+        // Rediriger ou afficher une erreur
+        header('Location: index.php?ctrl=user&action=unauthorized');
+        exit();
+    }
+
+    // Récupérer l'email de l'utilisateur à supprimer
+    $userEmail = $_POST['userEmail'] ?? null;
+
+    // Vérifier que ce n'est pas le compte de l'utilisateur connecté
+    if ($userEmail && $userEmail !== $_SESSION['user']['email']) {
+        // Appeler une méthode du UserManager pour supprimer l'utilisateur
+        $result = $this->userManager->deleteUserByEmail($userEmail);
+
+        if ($result) {
+            // Rediriger avec un message de succès
+            header('Location: index.php?ctrl=user&action=userList&success=1');
+        } else {
+            // Rediriger avec un message d'erreur
+            header('Location: index.php?ctrl=user&action=userList&error=1');
+        }
+        exit();
+    }
+}
 }

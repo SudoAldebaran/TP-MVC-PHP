@@ -160,4 +160,11 @@ class UserManager
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function deleteUserByEmail(string $email): bool
+{
+    $req = $this->db->prepare("DELETE FROM {$this->table} WHERE email = :email");
+    $req->bindValue(':email', $email);
+    return $req->execute();
+}
 }

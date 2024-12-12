@@ -27,9 +27,9 @@ class userController
     {
         $email = $_POST['email'];
         $password = $_POST['password'];
-    
+
         $result = $this->userManager->findByEmailAndPassword($email, $password);
-    
+
         if ($result) {
             $_SESSION['user'] = [
                 'firstName' => $result->getFirstName(),
@@ -42,7 +42,7 @@ class userController
         } else {
             $info = "Identifiants incorrects.";
         }
-    
+
         require('./View/main.php');
     }
 
@@ -80,20 +80,20 @@ class userController
     public function logout()
     {
         session_start();
-    
+
         session_unset();
-    
+
         session_destroy();
-    
+
         header('Location: index.php?ctrl=user&action=home&logout=true');
         exit();
-    }    
+    }
 
     public function isAdmin()
     {
         return isset($_SESSION['user']) && $_SESSION['user']['admin'] == 1;
     }
-    
+
     public function userList()
     {
         if ($this->isAdmin()) {
@@ -107,30 +107,64 @@ class userController
     }
 
     public function deleteUser()
-{
-    // Vérifier que l'utilisateur est admin
-    if (!$this->isAdmin()) {
-        // Rediriger ou afficher une erreur
-        header('Location: index.php?ctrl=user&action=unauthorized');
-        exit();
-    }
-
-    // Récupérer l'email de l'utilisateur à supprimer
-    $userEmail = $_POST['userEmail'] ?? null;
-
-    // Vérifier que ce n'est pas le compte de l'utilisateur connecté
-    if ($userEmail && $userEmail !== $_SESSION['user']['email']) {
-        // Appeler une méthode du UserManager pour supprimer l'utilisateur
-        $result = $this->userManager->deleteUserByEmail($userEmail);
-
-        if ($result) {
-            // Rediriger avec un message de succès
-            header('Location: index.php?ctrl=user&action=userList&success=1');
-        } else {
-            // Rediriger avec un message d'erreur
-            header('Location: index.php?ctrl=user&action=userList&error=1');
+    {
+        
+        if (!$this->isAdmin()) {
+            
+            header('Location: index.php?ctrl=user&action=unauthorized');
+            exit();
         }
-        exit();
+
+        
+        $userEmail = $_POST['userEmail'] ?? null;
+
+        if ($userEmail && $userEmail !== $_SESSION['user']['email']) {
+            
+            $result = $this->userManager->deleteUserByEmail($userEmail);
+
+            if ($result) {
+                
+                header('Location: index.php?ctrl=user&action=userList&success=1');
+            } else {
+                
+                header('Location: index.php?ctrl=user&action=userList&error=1');
+            }
+            exit();
+        }
     }
-}
+
+    public function editUser()
+    {
+        
+        if (!$this->isAdmin()) {
+            header('Location: index.php?ctrl=user&action=unauthorized');
+            exit();
+        }
+
+        $originalEmail = $_POST['originalEmail'] ?? null;
+        $newEmail = $_POST['email'] ?? null;
+        $firstName = $_POST['firstName'] ?? null;
+        $lastName = $_POST['lastName'] ?? null;
+        $admin = $_POST['admin'] ?? null;
+
+        
+        if ($originalEmail && $newEmail && $firstName && $lastName && $admin !== null) {
+            
+            $result = $this->userManager->updateUser($originalEmail, [
+                'email' => $newEmail,
+                'firstName' => $firstName,
+                'lastName' => $lastName,
+                'admin' => $admin
+            ]);
+
+            if ($result) {
+                
+                header('Location: index.php?ctrl=user&action=userList&success=1');
+            } else {
+                
+                header('Location: index.php?ctrl=user&action=userList&error=1');
+            }
+            exit();
+        }
+    }
 }

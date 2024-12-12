@@ -117,12 +117,12 @@ class UserManager
     public function findByEmailAndPassword(string $email, string $password): ?User
     {
         $hashedPassword = hash("sha256", $password);
-    
+
         $req = $this->db->prepare("SELECT * FROM {$this->table} WHERE email = :email AND password = :password");
         $req->bindValue(':email', $email);
         $req->bindValue(':password', $hashedPassword);
         $req->execute();
-    
+
         $donnees = $req->fetch(PDO::FETCH_ASSOC);
         if ($donnees) {
             $user = new User($donnees);
@@ -162,9 +162,29 @@ class UserManager
     }
 
     public function deleteUserByEmail(string $email): bool
-{
-    $req = $this->db->prepare("DELETE FROM {$this->table} WHERE email = :email");
-    $req->bindValue(':email', $email);
-    return $req->execute();
-}
+    {
+        $req = $this->db->prepare("DELETE FROM {$this->table} WHERE email = :email");
+        $req->bindValue(':email', $email);
+        return $req->execute();
+    }
+
+    public function updateUser(string $originalEmail, array $userData): bool
+    {
+        $req = $this->db->prepare("
+        UPDATE {$this->table} 
+        SET email = :email, 
+            firstName = :firstName, 
+            lastName = :lastName, 
+            admin = :admin 
+        WHERE email = :originalEmail
+    ");
+
+        $req->bindValue(':email', $userData['email']);
+        $req->bindValue(':firstName', $userData['firstName']);
+        $req->bindValue(':lastName', $userData['lastName']);
+        $req->bindValue(':admin', $userData['admin']);
+        $req->bindValue(':originalEmail', $originalEmail);
+
+        return $req->execute();
+    }
 }
